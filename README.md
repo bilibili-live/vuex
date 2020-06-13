@@ -263,9 +263,73 @@ export default {
 </script>
 ```
 
-## Model
+## Modules
 
-多模块, 同上操作
+模块在大型项目中用的比较多
+
+创建一个
+
+```js
+// store/index.js
+import user from './modules/user'
+export default new Vuex.Store({
+  modules: {
+    user
+  }
+})
+
+// store/modules/user.js
+const state = {
+  hasLogin: false
+}
+const mutations = {
+  CHANGE_LOGIN_STATUS(state, flag) {
+    state.hasLogin = flag
+  }
+}
+const action = {
+  async login({ commit }) {
+    await login()
+    commit('CHANGE_LOGIN_STATUS', true)
+  }
+}
+export default {
+  namespace: true, // TODO 不太懂这里
+  state,
+  mutations,
+  action
+}
+```
+
+用法
+
+```vue
+<script>
+import { mapState, mapMutations, mapActions } from 'vuex'
+export default {
+  // 原生写法
+  computed: {
+    hasLogin() {
+      return this.$store.user.hasLogin
+    },
+    ...mapState('user',[
+      'hasLogin'
+    ])
+    ...mapState('user',{
+      hasLogin: state=> state.hasLogin
+    })
+  },
+  methods: {
+    ...mapMutations('user', [
+      'CHANGE_LOGIN_STATUS'
+    ])
+    ...mapActions('user', [
+      'login'
+    ])
+  }
+}
+</script>
+```
 
 ## 常见问题
 
@@ -290,5 +354,39 @@ mutations: {
     handleVal(state, payload) {
         state.value = payload
     }
+}
+```
+
+2. 怎么在 `vue-typescript` 中友好的使用 `vuex`
+
+创建 `store/types.ts` 接口类型文件
+
+```ts
+// store/types.ts
+export interface userInterface {
+  hasLogin: boolean
+}
+
+// store/modules/user.ts
+import { MutationTree, GetterTree, ActionTree } from 'vuex'
+const state: userInterface = {
+  hasLogin: false
+}
+const mutations: MutationTree<userInterface> = {
+  CHANGE_LOGIN_STATUS(state, flag) {
+    state.hasLogin = flag
+  }
+}
+const action: ActionTree<userInterface, any> = {
+  async login({ commit }) {
+    await login()
+    commit('CHANGE_LOGIN_STATUS', true)
+  }
+}
+export default {
+  namespace: true, // TODO 不太懂这里
+  state,
+  mutations,
+  action
 }
 ```
